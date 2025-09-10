@@ -32,3 +32,6 @@ async function addUser(id, email) {
 }
 
 addUser(1, "test@example.com")
+addUser(2, "Prince@example.com")
+addUser(3, "Ritik@example.com")
+
