@@ -1,7 +1,6 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -24,5 +23,14 @@
   "devDependencies": {
     "nodemon": "^3.1.10",
     "prisma": "^6.16.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ghost99177862/Rishu.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ghost99177862/Rishu/issues"
+  },
+  "homepage": "https://github.com/ghost99177862/Rishu#readme",
+  "description": ""
 }
