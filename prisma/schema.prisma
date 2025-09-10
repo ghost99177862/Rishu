@@ -98,7 +98,7 @@ model Validation {
 
   @@unique([post_id, user_id])
 }
-
+  
 model AdminChat {
   chat_id    Int      @id @default(autoincrement())
   user_id    Int
@@ -108,4 +108,3 @@ model AdminChat {
 
   user User @relation(fields: [user_id], references: [user_id])
 }
-  
