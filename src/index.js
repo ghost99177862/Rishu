@@ -19,10 +19,10 @@ getUsers()
 
 // import { supabase } from './supabase.js'
 
-async function addUser(id, email) {
+async function addUser(email) {
   const { data, error } = await supabase
     .from('parvat')
-    .insert([{ id, email }])
+    .insert([{ email }])
 
   if (error) {
     console.error("Insert error:", error)
@@ -31,7 +31,12 @@ async function addUser(id, email) {
   }
 }
 
-addUser(1, "test@example.com")
-addUser(2, "Prince@example.com")
-addUser(3, "Ritik@example.com")
+addUser("test@example.com")
 
+addUser("ritik@example.com")
+
+addUser("ritikbhanfgd@example.com")
+
+
+addUser("eiufvervftyt@example.com")
+addUser("yrtrtyt@example.com")
