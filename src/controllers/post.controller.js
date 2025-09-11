@@ -1,19 +1,32 @@
-const prisma = require('../prisma/client');
+import { supabase } from "../supabase.js";
 
-exports.createPost = async (req, res) => {
-  const { type, content, college_id } = req.body;
-  if(!type || !content || !college_id) return res.status(400).json({ message: "Missing fields" });
+export const createPost = async (req, res) => {
+  try {
+    const { user_id, college_id, content, media_url, type } = req.body;
 
-  const post = await prisma.post.create({
-    data: { user_id: req.user.user_id, college_id: +college_id, type, content }
-  });
-  res.json(post);
+    if (!user_id || !college_id || !content) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const { data, error } = await supabase
+      .from("posts")
+      .insert([{ user_id, college_id, content, media_url, type }])
+      .select();
+
+    if (error) return res.status(500).json({ error: error.message });
+
+    res.json({ message: "Post created", post: data[0] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-exports.getFeed = async (req, res) => {
-  const posts = await prisma.post.findMany({
-    orderBy: { created_at: "desc" },
-    include: { user: { select: { ghost_id: true }}, college: { select: { name: true }} }
-  });
-  res.json(posts);
+export const getAllPosts = async (req, res) => {
+  const { data, error } = await supabase
+    .from("posts")
+    .select("*, users(ghost_id), colleges(name)")
+    .order("created_at", { ascending: false });
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
 };

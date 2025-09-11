@@ -1,37 +1,60 @@
-// index.js
-import { supabase } from './supabase.js'   // include .js extension
+// import express from "express";
+// import { supabase } from "./supabase.js";
 
-async function getUsers() {
-  const { data, error } = await supabase
-    .from('parvat')
-    .select('*')
+// const app = express();
+// const PORT = process.env.PORT || 3000;
 
-  if (error) {
-    console.error("Fetch error:", error)
-  } else {
-    console.log("Users:", data)
-  }
-}
+// app.use(express.json());
 
-getUsers()
+// // Add user API
+// app.post("/add-user", async (req, res) => {
+//   const { email } = req.body;
+//   if (!email) return res.status(400).json({ error: "Email is required" });
+
+//   // check if user already exists
+//   const { data: existing, error: fetchError } = await supabase
+//     .from("parvat")
+//     .select("*")
+//     .eq("email", email)
+//     .limit(1);
+
+//   if (fetchError) return res.status(500).json({ error: fetchError.message });
+
+//   if (!existing || existing.length === 0) {
+//     const { data, error } = await supabase.from("parvat").insert([{ email }]);
+//     if (error) return res.status(500).json({ error: error.message });
+//     return res.json({ message: "User inserted", user: data });
+//   } else {
+//     return res.json({ message: "User already exists", user: existing });
+//   }
+// });
+
+// // Get all users
+// app.get("/users", async (req, res) => {
+//   const { data, error } = await supabase.from("parvat").select("*");
+//   if (error) return res.status(500).json({ error: error.message });
+//   res.json(data);
+// });
+
+// // Health check route
+// app.get("/", (req, res) => {
+//   res.send("✅ Supabase API is running on Render!");
+// });
+
+// app.listen(PORT, () => {
+//   console.log(`🚀 Server running on port ${PORT}`);
+// });
 
 
 
-// import { supabase } from './supabase.js'
+import app from "./app.js";
 
-async function addUser(id, email) {
-  const { data, error } = await supabase
-    .from('parvat')
-    .insert([{ id, email }])
+const PORT = process.env.PORT || 3000;
 
-  if (error) {
-    console.error("Insert error:", error)
-  } else {
-    console.log("Inserted:", data)
-  }
-}
+app.get("/", (req, res) => {
+  res.send("✅ API is running with Supabase + Express!");
+});
 
-addUser(1, "test@example.com")
-addUser(2, "Prince@example.com")
-addUser(3, "Ritik@example.com")
-
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+});

@@ -1,30 +1,41 @@
-const prisma = require('../prisma/client');
-const jwt = require('jsonwebtoken');
-const generateGhostId = require('../utils/generateGhostId');
+import { supabase } from "../supabase.js";
+import { generateGhostId } from "../utils/generateGhostId.js";
 
-const otpStore = new Map(); // dev only
+export const registerUser = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: "Email is required" });
 
-exports.signup = async (req, res) => {
-  const { email } = req.body;
-  if(!email) return res.status(400).json({ message: "Email required" });
-  const otp = String(Math.floor(100000 + Math.random()*900000));
-  otpStore.set(email, otp);
-  console.log(`OTP for ${email}: ${otp}`);
-  res.json({ message: "OTP sent (check logs)" });
+    // Check if user exists
+    const { data: existing, error: fetchError } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", email)
+      .limit(1);
+
+    if (fetchError) return res.status(500).json({ error: fetchError.message });
+
+    if (existing && existing.length > 0) {
+      return res.json({ message: "User already exists", user: existing[0] });
+    }
+
+    const ghostId = await generateGhostId();
+
+    const { data, error } = await supabase
+      .from("users")
+      .insert([{ email, ghost_id: ghostId }])
+      .select();
+
+    if (error) return res.status(500).json({ error: error.message });
+
+    return res.json({ message: "User created", user: data[0] });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
 };
 
-exports.verify = async (req, res) => {
-  const { email, otp } = req.body;
-  if(!email || !otp) return res.status(400).json({ message: "Email+OTP required" });
-  if(otpStore.get(email) !== otp) return res.status(400).json({ message: "Invalid OTP" });
-
-  let user = await prisma.user.findUnique({ where: { email }});
-  if(!user){
-    const ghost_id = await generateGhostId();
-    user = await prisma.user.create({ data: { email, ghost_id }});
-  }
-  otpStore.delete(email);
-
-  const token = jwt.sign({ user_id: user.user_id, ghost_id: user.ghost_id }, process.env.JWT_SECRET, { expiresIn: "30d" });
-  res.json({ token, ghost_id: user.ghost_id });
+export const getUsers = async (req, res) => {
+  const { data, error } = await supabase.from("users").select("*");
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
 };

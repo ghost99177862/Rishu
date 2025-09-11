@@ -1,16 +1,21 @@
-const express = require('express');
-const cors = require('cors');
-const morgan = require('morgan');
-
-const authRoutes = require('./routes/auth.routes');
-const postRoutes = require('./routes/post.routes');
+import express from "express";
+import authRoutes from "./routes/auth.routes.js";
+import postRoutes from "./routes/post.routes.js";
+import collegeRoutes from "./routes/college.routes.js";
+import commentRoutes from "./routes/comment.routes.js";      // NEW
+import validationRoutes from "./routes/validation.routes.js"; // NEW
+          // NEW
 
 const app = express();
-app.use(cors());
-app.use(morgan('dev'));
+
 app.use(express.json());
 
-app.use('/auth', authRoutes);
-app.use('/posts', postRoutes);
+// Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/posts", postRoutes);          // better: keep posts separate
+app.use("/api/colleges", collegeRoutes);
+app.use("/api/comments", commentRoutes);    // NEW
+app.use("/api/validations", validationRoutes); // NEW
+     
 
-module.exports = app;
+export default app;
