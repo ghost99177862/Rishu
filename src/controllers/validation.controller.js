@@ -14,7 +14,7 @@ export const addOrUpdateValidation = async (req, res) => {
     }
 
     // check existence
-    const user = await prisma.user.findUnique({ where: { user_id: Number(user_id) } });
+    const user = await pri      sma.user.findUnique({ where: { user_id: Number(user_id) } });
     if (!user) return res.status(404).json({ error: "User not found" });
 
     const post = await prisma.post.findUnique({ where: { post_id: Number(post_id) } });
