@@ -1,93 +1,91 @@
-// src/controllers/validation.controller.js
-
+import { supabase } from "../supabase.js";
 
 /**
  * POST /api/validations
- * body: { post_id, user_id, vote } // vote = true (valid) or false (invalid)
- * This endpoint will upsert a vote: create if not exists, update if exists.
+ * body: { post_id, user_id, vote } // vote = true or false
  */
 export const addOrUpdateValidation = async (req, res) => {
   try {
     const { post_id, user_id, vote } = req.body;
-    if (post_id == null || user_id == null || typeof vote !== "boolean") {
+    if (!post_id || !user_id || typeof vote !== "boolean") {
       return res.status(400).json({ error: "post_id, user_id and boolean vote required" });
     }
 
-    // check existence
-    const user = await prisma.user.findUnique({ where: { user_id: Number(user_id) } });
-    if (!user) return res.status(404).json({ error: "User not found" });
+    // Check if validation already exists
+    const { data: existing, error: fetchError } = await supabase
+      .from("validations")
+      .select("*")
+      .eq("post_id", post_id)
+      .eq("user_id", user_id)
+      .single();
 
-    const post = await prisma.post.findUnique({ where: { post_id: Number(post_id) } });
-    if (!post) return res.status(404).json({ error: "Post not found" });
-
-    // upsert using unique constraint (post_id + user_id)
-    const existing = await prisma.validation.findUnique({
-      where: {
-        post_id_user_id: {
-          post_id: Number(post_id),
-          user_id: Number(user_id),
-        }
-      }
-    }).catch(() => null);
+    if (fetchError && fetchError.code !== "PGRST116") {
+      return res.status(500).json({ error: fetchError.message });
+    }
 
     if (existing) {
-      const updated = await prisma.validation.update({
-        where: { validation_id: existing.validation_id },
-        data: { vote }
-      });
-      return res.json({ message: "Vote updated", vote: updated });
+      // Update existing vote
+      const { data, error } = await supabase
+        .from("validations")
+        .update({ vote })
+        .eq("id", existing.id)
+        .select();
+
+      if (error) return res.status(500).json({ error: error.message });
+      return res.json({ message: "Vote updated", vote: data[0] });
     } else {
-      const created = await prisma.validation.create({
-        data: {
-          post_id: Number(post_id),
-          user_id: Number(user_id),
-          vote,
-        }
-      });
-      return res.status(201).json({ message: "Vote recorded", vote: created });
+      // Insert new vote
+      const { data, error } = await supabase
+        .from("validations")
+        .insert([{ post_id, user_id, vote }])
+        .select();
+
+      if (error) return res.status(500).json({ error: error.message });
+      return res.status(201).json({ message: "Vote recorded", vote: data[0] });
     }
   } catch (err) {
-    console.error(err);
-    // Prisma unique constraint error handling (if race)
     return res.status(500).json({ error: err.message });
   }
 };
 
 /**
  * GET /api/posts/:id/validations
- * returns counts: { valid: X, invalid: Y }
  */
 export const getValidationCounts = async (req, res) => {
   try {
-    const postId = Number(req.params.id);
+    const postId = req.params.id;
 
-    const validCount = await prisma.validation.count({
-      where: { post_id: postId, vote: true }
-    });
-    const invalidCount = await prisma.validation.count({
-      where: { post_id: postId, vote: false }
-    });
+    const { count: validCount } = await supabase
+      .from("validations")
+      .select("*", { count: "exact", head: true })
+      .eq("post_id", postId)
+      .eq("vote", true);
 
-    // optionally, return user's vote if user_id query provided
-    const userVote = req.query.user_id
-      ? await prisma.validation.findUnique({
-          where: {
-            post_id_user_id: {
-              post_id: postId,
-              user_id: Number(req.query.user_id)
-            }
-          }
-        }).catch(() => null)
-      : null;
+    const { count: invalidCount } = await supabase
+      .from("validations")
+      .select("*", { count: "exact", head: true })
+      .eq("post_id", postId)
+      .eq("vote", false);
+
+    let userVote = null;
+    if (req.query.user_id) {
+      const { data } = await supabase
+        .from("validations")
+        .select("vote")
+        .eq("post_id", postId)
+        .eq("user_id", req.query.user_id)
+        .single();
+
+      if (data) userVote = data.vote;
+    }
 
     return res.json({
       post_id: postId,
       valid: validCount,
       invalid: invalidCount,
-      your_vote: userVote ? userVote.vote : null
+      your_vote: userVote
     });
   } catch (err) {
-    console.error(err);
     return res.status(500).json({ error: err.message });
   }
 };
