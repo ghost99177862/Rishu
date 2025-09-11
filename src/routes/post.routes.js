@@ -1,8 +1,9 @@
-const router = require('express').Router();
-const auth = require('../middlewares/auth.middleware');
-const ctrl = require('../controllers/post.controller');
+import { Router } from "express";
+import { createPost, getAllPosts } from "../controllers/post.controller.js";
 
-router.post('/', auth, ctrl.createPost);
-router.get('/feed', ctrl.getFeed);
+const router = Router();
 
-module.exports = router;
+router.post("/posts", createPost);
+router.get("/posts", getAllPosts);
+
+export default router;

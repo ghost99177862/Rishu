@@ -1,16 +1,13 @@
-const express = require('express');
-const cors = require('cors');
-const morgan = require('morgan');
-
-const authRoutes = require('./routes/auth.routes');
-const postRoutes = require('./routes/post.routes');
+import express from "express";
+import authRoutes from "./routes/auth.routes.js";
+import postRoutes from "./routes/post.routes.js";
 
 const app = express();
-app.use(cors());
-app.use(morgan('dev'));
+
 app.use(express.json());
 
-app.use('/auth', authRoutes);
-app.use('/posts', postRoutes);
+// Routes
+app.use("/api/auth", authRoutes);
+app.use("/api", postRoutes);
 
-module.exports = app;
+export default app;
