@@ -1,42 +1,46 @@
-import { supabase } from './supabase.js'
+import express from "express";
+import { supabase } from "./supabase.js";
 
-async function addUser(email) {
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(express.json());
+
+// Add user API
+app.post("/add-user", async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: "Email is required" });
+
   // check if user already exists
   const { data: existing, error: fetchError } = await supabase
-    .from('parvat')
-    .select('*')
-    .eq('email', email)
-    .limit(1)
+    .from("parvat")
+    .select("*")
+    .eq("email", email)
+    .limit(1);
 
-  if (fetchError) {
-    console.error("Fetch error:", fetchError)
-    return
-  }
+  if (fetchError) return res.status(500).json({ error: fetchError.message });
 
-  if (existing.length === 0) {
-    const { data, error } = await supabase
-      .from('parvat')
-      .insert([{ email }])
-    if (error) {
-      console.error("Insert error:", error)
-    } else {
-      console.log("Inserted:", email)
-    }
+  if (!existing || existing.length === 0) {
+    const { data, error } = await supabase.from("parvat").insert([{ email }]);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ message: "User inserted", user: data });
   } else {
-    console.log("User already exists:", email)
+    return res.json({ message: "User already exists", user: existing });
   }
-}
+});
 
-async function main() {
-  await addUser("test@example.com")
-  await addUser("ritik@example.com")
-  await addUser("ritikbhanfgd@example.com")
-  await addUser("eiufvervftyt@example.com")
-  await addUser("yrtrtyt@example.com")
+// Get all users
+app.get("/users", async (req, res) => {
+  const { data, error } = await supabase.from("parvat").select("*");
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
 
-  const { data, error } = await supabase.from('parvat').select('*')
-  if (error) console.error("Fetch error:", error)
-  else console.log("Users:", data)
-}
+// Health check route
+app.get("/", (req, res) => {
+  res.send("✅ Supabase API is running on Render!");
+});
 
-main()
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
