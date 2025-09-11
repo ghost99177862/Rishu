@@ -5,9 +5,10 @@ export const addCollege = async (req, res) => {
   try {
     const { name, type, established, location, courses, facilities, tags } = req.body;
 
-    if (!name || !type || !established || !location) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
+   if (!name || !location) {
+  return res.status(400).json({ error: "College name and location are required" });
+}
+
 
     const { data, error } = await supabase
       .from("colleges")

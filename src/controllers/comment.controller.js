@@ -14,7 +14,7 @@ export const addComment = async (req, res) => {
 
     // validate existence of user and post (helpful to give proper FK error)
     const user = await prisma.user.findUnique({ where: { user_id: Number(user_id) } });
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user) return res.status(404).json({  error: "User not found" });
 
     const post = await prisma.post.findUnique({ where: { post_id: Number(post_id) } });
     if (!post) return res.status(404).json({ error: "Post not found" });
