@@ -28,11 +28,6 @@ async function addUser(email) {
 }
 
 async function main() {
-  await addUser("test@example.com")
-  await addUser("ritik@example.com")
-  await addUser("ritikbhanfgd@example.com")
-  await addUser("eiufvervftyt@example.com")
-  await addUser("yrtrtyt@example.com")
 
   const { data, error } = await supabase.from('parvat').select('*')
   if (error) console.error("Fetch error:", error)
