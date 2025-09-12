@@ -12,15 +12,15 @@ export const addComment = async (req, res) => {
     }
 
     const { data, error } = await supabase
-      .from("comments")
-      .insert([{ post_id, user_id, content }])
-      .select("*, users(ghost_id, user_id)");
+  .from("comments")
+  .insert([{ post_id, user_id, content }])
+  .select();
 
     if (error) return res.status(500).json({ error: error.message });
 
     return res.status(201).json({ message: "Comment added", comment: data[0] });
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: err.message + " from comment controller" });
   }
 };
 
@@ -32,10 +32,11 @@ export const getCommentsForPost = async (req, res) => {
     const postId = req.params.id;
 
     const { data, error } = await supabase
-      .from("comments")
-      .select("*, users(ghost_id, user_id)")
-      .eq("post_id", postId)
-      .order("created_at", { ascending: false });
+  .from("comments")
+  .select("*")
+  .eq("post_id", postId)
+  .order("created_at", { ascending: false });
+
 
     if (error) return res.status(500).json({ error: error.message });
 
@@ -51,11 +52,10 @@ export const getCommentsForPost = async (req, res) => {
 export const deleteComment = async (req, res) => {
   try {
     const commentId = req.params.id;
-    const { user_id } = req.body;
+    const user_id = req.query.user_id; // 👈 take from query instead of body
 
     if (!user_id) return res.status(400).json({ error: "user_id required" });
 
-    // Ensure comment exists & belongs to user
     const { data: comment, error: fetchError } = await supabase
       .from("comments")
       .select("*")
